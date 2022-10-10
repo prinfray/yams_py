@@ -1,5 +1,7 @@
 # from collections import Counter
 
+from itertools import combinations
+from math import comb
 import random
 
 
@@ -15,19 +17,27 @@ class Game:
     game_on = True
     def __init__(self):
         dices = Dices()
-        dices.rollAll()
-        dices.getDices()
+        score = Score()
         while self.game_on == True:
-            dices.nextThrow()
-            score = Score()
-            dices.detectFigure(score)
-            combination = dices.chooseCombination()
-            score.setScore(combination)
+
+            result = self.doRound(dices, score)
+            score.setScore(result)
             score.getScore()
 
     def endGame(self,game):
         self.finalScore()
         game.game_on = False
+        
+    def doRound(self,dices,score):
+        while dices.round_is_end == False :
+            dices.rollAll()
+            dices.getDices()
+            dices.nextThrow()
+            dices.detectFigure(score)
+            combination = dices.chooseCombination()
+            return combination
+            
+            
 
 # class Round :
     # 13 round max
@@ -60,6 +70,7 @@ class Dices:
     counterSuit = 0
     combinations = {}
 
+    round_is_end = False
     throw_count = 0
 
     def __init__(self):
@@ -111,6 +122,8 @@ class Dices:
         combination = []
         combination.append(choice)
         combination.append(value)
+        print (combination)
+        self.round_is_end = True
         return combination
 
 # brelan somme
@@ -274,11 +287,10 @@ class Score:
     yams = False
     chance = False
 
-    def setScore(self, combination):
-        print(combination)
-        combinations_choosed = {}
-        combinations_choosed[combination[0]] = combination[1]
-        print(combinations_choosed)
+    def setScore(self, result):
+        combination = result
+        print('COMBINAISON', combination)
+
         if combination[0] == "one":
             self.one = True
         if combination[0] == "two":
