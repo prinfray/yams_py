@@ -1,7 +1,3 @@
-# from collections import Counter
-
-from itertools import combinations
-from math import comb
 import random
 
 
@@ -11,32 +7,31 @@ class Main:
     def __init__(self):
         self.game = Game()
 
+
 class Game:
     score = None
     game_on = None
     round = None
     dices = None
+
     def __init__(self):
         self.game_on = True
         self.dices = Dices()
         self.score = Score()
-        
+
         while self.game_on == True:
             self.doRound()
-            
 
     def endGame(self):
         self.game_on = False
-        self.score.finalScore(self.score)
-        
-        
+        self.score.finalScore()
+
     def doRound(self):
-        
+
         self.round = Round(self.score, self.dices)
         self.dices.throw_count = 0
         self.dices.round_is_end = False
-        while self.dices.round_is_end == False :
-            print ("DANS LE WHILE")
+        while self.dices.round_is_end == False:
             self.dices.rollAll()
             self.dices.getDices()
             self.dices.nextThrow()
@@ -50,12 +45,9 @@ class Game:
         choice = self.round.chooseCombination()
         self.score.setScore(choice)
         self.score.getScore()
-            
-            
 
 
-
-class Round :
+class Round:
 
     one = 0
     two = 0
@@ -70,137 +62,167 @@ class Round :
     big_suit = 0
     yams = 0
     counterSuit = 0
-  
+
     def __init__(self, score, dices):
-        print("INITIALISATION DU ROUND")
         self.score = score
         self.dices = dices
         self.combinations = {}
 
     def chooseCombination(self):
-        print("choisir la combinaison")
-        print(self.combinations)
+        print("choisir la combinaison", self.combinations)
         choice = input()
         value = self.combinations.get(choice)
         combination = []
         combination.append(choice)
         combination.append(value)
         return combination
-        
 
     def detectFigure(self):
+        # Tri des dés par ordre croissant
         (self.dices.result).sort()
+        # On parcour chaque valeur unitairement
         for i in range(len(self.dices.result)):
             current_val = self.dices.result[i]
-            if current_val == 1:
-                self.one += 1
-            if current_val == 2:
-                self.two += 1
-            if current_val == 3:
-                self.three += 1
-            if current_val == 4:
-                self.four += 1
-            if current_val == 5:
-                self.five += 1
-            if current_val == 6:
-                self.six += 1
+            self.detectNumber(current_val)
+            self.countSuit(i, current_val)
+        self.detectBrelan()
+        self.detectSquare()
+        self.detectFull()
+        self.detectSuit()
+        self.detectYams()
+        self.setPossiblesCombis()
+        return self.combinations
 
-            if current_val == self.dices.result[i-1] + 1:
-                self.counterSuit += 1
-            if current_val > self.dices.result[i-1] + 1:
-                self.counterSuit -= 1
+    def setCombiOne(self):
+        if 'one' in self.score.score_possible:
+            value = self.one * 1
+            self.combinations["one"] = value
 
+    def setCombiTwo(self):
+        if 'two' in self.score.score_possible:
+            value = self.two * 2
+            self.combinations["two"] = value
+
+    def setCombiThree(self):
+        if 'three' in self.score.score_possible:
+            value = self.three * 3
+            self.combinations["three"] = value
+
+    def setCombiFour(self):
+        if 'four' in self.score.score_possible:
+            value = self.four * 4
+            self.combinations["four"] = value
+
+    def setCombiFive(self):
+        if 'five' in self.score.score_possible:
+            value = self.five * 5
+            self.combinations["five"] = value
+
+    def setCombiSix(self):
+        if 'six' in self.score.score_possible:
+            value = self.six * 6
+            self.combinations["six"] = value
+            # print("six : ", value)
+
+    def setCombiBrelan(self):
+        if 'brelan' in self.score.score_possible:
+            value = self.dices.getSum()
+            self.combinations["brelan"] = value
+
+    def setCombiSquare(self):
+        if 'square' in self.score.score_possible:
+            value = self.dices.getSum()
+            self.combinations["square"] = value
+
+    def setCombiFull(self):
+        if 'full' in self.score.score_possible:
+            self.combinations["full"] = 25
+
+    def setCombiSmallSuit(self):
+        if 'small suit' in self.score.score_possible:
+            self.combinations["small suit"] = 25
+
+    def setCombiBigSuit(self):
+        if 'big suit' in self.score.score_possible:
+            self.combinations["big suit"] = 25
+
+    def setCombiYams(self):
+        if 'yams' in self.score.score_possible:
+            value = 50
+            self.combinations["chance"] = value
+
+    def detectNumber(self, current_val):
+        if current_val == 1:
+            self.one += 1
+        if current_val == 2:
+            self.two += 1
+        if current_val == 3:
+            self.three += 1
+        if current_val == 4:
+            self.four += 1
+        if current_val == 5:
+            self.five += 1
+        if current_val == 6:
+            self.six += 1
+
+    def countSuit(self, i, current_val):
+        if current_val == self.dices.result[i-1] + 1:
+            self.counterSuit += 1
+        if current_val > self.dices.result[i-1] + 1:
+            self.counterSuit -= 1
+
+    def detectBrelan(self):
         if self.one == 3 or self.two == 3 or self.three == 3 or self.four == 3 or self.five == 3 or self.six == 3:
             self.brelan += 1
 
+    def detectSquare(self):
         if self.one == 4 or self.two == 4 or self.three == 4 or self.four == 4 or self.five == 4 or self.six == 4:
             self.square += 1
 
+    def detectFull(self):
         if (self.one == 3 or self.two == 3 or self.three == 3 or self.four == 3 or self.five == 3 or self.six == 3) and (self.one == 2 or self.two == 2 or self.three == 2 or self.four == 2 or self.five == 2 or self.six == 2):
             self.full += 1
 
+    def detectSuit(self):
         if self.counterSuit == 3:
             self.small_suit += 1
         if self.counterSuit == 4:
             self.big_suit += 1
 
+    def detectYams(self):
         if self.one == 5 or self.two == 5 or self.three == 5 or self.four == 5 or self.five == 5 or self.six == 5:
             self.yams += 1
 
+    def setPossiblesCombis(self):
         if self.one > 0:
-            if  'one' in self.score.score_possible:
-                value = self.one
-                value = value * 1
-                self.combinations["one"] = value
-                
+            self.setCombiOne()
         if self.two > 0:
-            if  'two' in self.score.score_possible:
-                value = self.two
-                value = value * 2
-                self.combinations["two"] = value
-                
+            self.setCombiTwo()
         if self.three > 0:
-            if  'three' in self.score.score_possible:
-                value = self.three
-                value = value * 3
-                self.combinations["three"] = value
-                
+            self.setCombiThree()
         if self.four > 0:
-            if  'four' in self.score.score_possible:
-                value = self.four
-                value = value * 4
-                self.combinations["four"] = value
-               
+            self.setCombiFour()
         if self.five > 0:
-            if  'five' in self.score.score_possible:
-                value = self.five
-                value = value * 5
-                self.combinations["five"] = value
-                
+            self.setCombiFive()
         if self.six > 0:
-            if  'six' in self.score.score_possible:
-                value = self.six
-                value = value * 6
-                self.combinations["six"] = value
-                # print("six : ", value)
-        
+            self.setCombiSix()
         if self.brelan > 0:
-            if  'brelan' in self.score.score_possible:
-                value = self.dices.getSum()
-                self.combinations["brelan"] = value
+            self.setCombiBrelan()
         if self.square > 0:
-            if  'square' in self.score.score_possible:
-                value = self.dices.getSum()
-                self.combinations["square"] = value
+            self.setCombiSquare()
         if self.full > 0:
-            if  'full' in self.score.score_possible:
-                self.combinations["full"] = 25
-
+            self.setCombiFull()
         if self.small_suit > 0:
-            if  'small suit' in self.score.score_possible:
-                self.combinations["small suit"] = 25
-
+            self.setCombiSmallSuit()
         if self.big_suit > 0:
-            if  'big suit' in self.score.score_possible:
-                self.combinations["big suit"] = 25
-
-        if  'chance' in self.score.score_possible:
+            self.setCombiBigSuit()
+        if self.yams > 0:
+            self.setCombiYams()
+        if 'chance' in self.score.score_possible:
             value = self.dices.getSum()
             self.combinations["chance"] = value
 
-        if self.yams > 0:
-            if  'yams' in self.score.score_possible:
-                value = 50
-                self.combinations["chance"] = value
-        return self.combinations
 
-            # if len(self.score.score_possible) == 0:
-            #     return 'Game ended'
-            # print("CHOISSISSEZ LA COMBINAISON A SACRIFIER")
-            # print(self.score.score_possible)
-            # combi_to_delete = input()
-            # self.score.score_possible.remove(combi_to_delete)
-            
     def checkRemainingFigures(self, score):
         if len(score.score_possible) == 0:
             return "no possibility"
@@ -208,8 +230,6 @@ class Round :
         combi_to_delete = input()
         self.score.score_possible.remove(combi_to_delete)
         return "success"
-
-
 
 
 class Dice:
@@ -224,12 +244,10 @@ class Dices:
     dices = []
     result = []
     throw_count = 0
-
     round_is_end = False
-    
 
     def __init__(self):
-        print("INITIALISATION DES DEES")
+
         for i in range(0, 5):
             self.dices.append(Dice())
 
@@ -268,10 +286,6 @@ class Dices:
         self.getDices()
         self.nextThrow()
 
-# brelan somme
-# carre somme
-# full 25
-
     def nextThrow(self):
         while self.throw_count < 3:
             print("voulez vous reroll ? y/n")
@@ -282,7 +296,6 @@ class Dices:
             if response == "n":
                 self.throw_count = 4
         self.round_is_end = True
-        
 
     def getSum(self):
         value = 0
@@ -291,29 +304,12 @@ class Dices:
             value = value + current_val
         return value
 
-   
-
 
 class Score:
-
     sum_points = 0
-
-    # one = False
-    # two = False
-    # three = False
-    # four = False
-    # five = False
-    # six = False
     bonus_part_1 = False
-    #  si score final > 63 , 35 points bonus sur le score final .
-    # brelan = False
-    # square = False
-    # full = False
-    # small_suit = False
-    # big_suit = False
-    # yams = False
-    # chance = False
-    score_possible = ['one','two','three','four','five','six','brelan','square','full','chance','yams']
+    score_possible = ['one', 'two', 'three', 'four', 'five',
+                      'six', 'brelan', 'square', 'full', 'chance', 'yams']
 
     def __init__(self):
         print("INITIALISATION DU SCORE")
@@ -324,29 +320,6 @@ class Score:
         combinations_choosed[combination[0]] = combination[1]
         print(combinations_choosed)
         self.score_possible.remove(combination[0])
-        # print('COMBINAISON', combination)
-        # if combination[0] == 'one':
-        #     self.one = True
-        # if combination[0] == 'two':
-        #     self.two = True
-        # if combination[0] == 'three':
-        #     self.three = True
-        # if combination[0] == 'four':
-        #     self.four = True
-        # if combination[0] == 'five':
-        #     self.five = True
-        # if combination[0] == 'six':
-        #     self.six = True
-        # if combination[0] == 'brelan':
-        #     self.brelan = True
-        # if combination[0] == 'square':
-        #     self.square = True
-        # if combination[0] == 'full':
-        #     self.full = True
-        # if combination[0] == 'chance':
-        #     self.chance = True  
-        # if combination[0] == 'yams':
-        #     self.yams = True
         self.sum_points += combination[1]
 
     def getScore(self):
@@ -354,7 +327,9 @@ class Score:
 
     def finalScore(self):
         if self.sum_points > 63:
-            print ("BONUS DE POINTS !!!")
+            print("BONUS DE POINTS !!!")
             self.sum_points += 35
-        print ("SCORE FINAL:" , self.sum_points)
+        print("SCORE FINAL:", self.sum_points)
+
+
 Game()
